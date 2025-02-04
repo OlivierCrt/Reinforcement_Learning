@@ -43,6 +43,8 @@ class FrozenLake:
 
         if action == 'up' and x > 0:
             x -= 1
+
+        
         elif action == 'down' and x < self.grid_size - 1:
             x += 1
         elif action == 'left' and y > 0:
