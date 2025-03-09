@@ -1,122 +1,170 @@
 import numpy as np
-from src.Affichage import Affichage
+import random
 
 class QLearning:
-    def __init__(self, frozen_lake, alpha=0.1, gamma=0.9, epsilon=0.1):
+    def __init__(self, env, alpha=0.1, gamma=0.99, epsilon=0.1):
         """
-        Initialisation de l'algorithme Q-learning.
+        Initialise l'algorithme Q-Learning.
         
         Args:
-            frozen_lake: L'environnement FrozenLake
-            alpha: Taux d'apprentissage (learning rate)
-            gamma: Facteur de réduction pour les récompenses futures
-            epsilon: Probabilité d'exploration (epsilon-greedy)
+            env: L'environnement FrozenLake
+            alpha: Taux d'apprentissage
+            gamma: Facteur de dépréciation
+            epsilon: Probabilité d'exploration
         """
-        self.frozen_lake = frozen_lake
+        self.env = env
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
-        self.actions = frozen_lake.actions
-        self.grid_size = frozen_lake.grid_size
-        self.affichage = Affichage(frozen_lake)
         
         # Initialisation de la Q-table
         self.Q = {}
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                self.Q[(i, j)] = {action: 0.0 for action in self.actions}
+        for i in range(self.env.grid_size):
+            for j in range(self.env.grid_size):
+                self.Q[(i, j)] = {action: 0.0 for action in self.env.actions}
     
     def choose_action(self, state):
         """
-        Choisir une action selon la stratégie epsilon-greedy.
+        Choisit une action selon la politique epsilon-greedy.
         
         Args:
-            state: État courant (tuple (i, j))
-        
+            state: L'état actuel
+            
         Returns:
-            str: Action choisie
+            L'action choisie
         """
-        if np.random.rand() < self.epsilon:
-            # Exploration : choisir une action aléatoire
-            return np.random.choice(self.actions)
+        if random.uniform(0, 1) < self.epsilon:
+            # Exploration: action aléatoire
+            return random.choice(self.env.actions)
         else:
-            # Exploitation : choisir l'action avec la plus grande valeur Q
+            # Exploitation: meilleure action connue
             return max(self.Q[state], key=self.Q[state].get)
     
-    def update_q_value(self, state, action, reward, next_state):
+    def update(self, state, action, reward, next_state, done):
         """
-        Mettre à jour la Q-value selon la formule de Q-learning.
+        Met à jour la Q-table selon l'équation de Bellman.
         
         Args:
-            state: État courant (tuple (i, j))
-            action: Action choisie (str)
-            reward: Récompense obtenue (float)
-            next_state: Prochain état (tuple (i, j))
+            state: L'état actuel
+            action: L'action effectuée
+            reward: La récompense reçue
+            next_state: L'état suivant
+            done: Indique si l'épisode est terminé
         """
-        # Valeur Q actuelle
-        current_q = self.Q[state][action]
+        # Calcul de la valeur cible pour la mise à jour
+        if done:
+            # Pas d'état suivant si l'épisode est terminé
+            max_next_q = 0
+        else:
+            # Prendre la meilleure action possible pour l'état suivant
+            max_next_q = max(self.Q[next_state].values())
         
-        # Meilleure Q-value pour le prochain état
-        max_next_q = max(self.Q[next_state].values())
+        # Calcul de l'erreur de prédiction (delta)
+        delta = reward + self.gamma * max_next_q - self.Q[state][action]
         
         # Mise à jour de la Q-value
-        self.Q[state][action] = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
+        self.Q[state][action] += self.alpha * delta
     
-    def train(self, num_episodes=1000):
+    def train(self, episodes=1000):
         """
-        Entraîner l'agent avec Q-learning.
+        Entraîne l'agent sur un nombre donné d'épisodes.
         
         Args:
-            num_episodes: Nombre d'épisodes d'entraînement
+            episodes: Nombre d'épisodes d'entraînement
+            
+        Returns:
+            rewards: Liste des récompenses par épisode
+            steps: Liste du nombre d'étapes par épisode
         """
-        for episode in range(num_episodes):
-            # Réinitialiser l'environnement
-            state = self.frozen_lake.reset()
+        rewards = []
+        steps = []
+        
+        for episode in range(episodes):
+            state = self.env.reset()
+            episode_reward = 0
+            episode_steps = 0
             done = False
             
             while not done:
                 # Choisir une action
                 action = self.choose_action(state)
                 
-                # Exécuter l'action et obtenir le prochain état et la récompense
-                next_state, reward, done = self.frozen_lake.step(action)
+                # Effectuer l'action
+                next_state, reward, done = self.env.step(action)
                 
-                # Mettre à jour la Q-value
-                self.update_q_value(state, action, reward, next_state)
+                # Mettre à jour la Q-table
+                self.update(state, action, reward, next_state, done)
                 
-                # Passer au prochain état
+                # Mise à jour de l'état
                 state = next_state
+                episode_reward += reward
+                episode_steps += 1
             
-            # Afficher la Q-table tous les 100 épisodes
+            rewards.append(episode_reward)
+            steps.append(episode_steps)
+            
+            # Affichage de la progression
             if (episode + 1) % 100 == 0:
-                print(f"Épisode {episode + 1}")
-                self.affichage.afficher_q_table(self.Q)
+                print(f"Épisode {episode + 1}/{episodes}, Récompense Moyenne: {np.mean(rewards[-100:]):.2f}")
         
-        # Afficher la Q-table finale
-        print("Q-table finale :")
-        self.affichage.afficher_q_table(self.Q)
+        return rewards, steps
     
-    def get_optimal_policy(self):
+    def get_policy(self):
         """
-        Obtenir la politique optimale à partir de la Q-table.
+        Extrait la politique optimale à partir de la Q-table.
         
         Returns:
-            dict: Politique optimale (état -> action)
+            policy: Un dictionnaire contenant la politique optimale
         """
         policy = {}
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                state = (i, j)
-                policy[state] = max(self.Q[state], key=self.Q[state].get)
+        for state in self.Q:
+            policy[state] = {action: 0.0 for action in self.env.actions}
+            best_action = max(self.Q[state], key=self.Q[state].get)
+            policy[state][best_action] = 1.0
         return policy
     
-    def afficher_resultats(self):
+    def get_value_function(self):
         """
-        Afficher la Q-table et la politique optimale.
-        """
-        # Afficher la Q-table
-        self.affichage.afficher_q_table(self.Q)
+        Calcule la fonction de valeur d'état à partir de la Q-table.
         
-        # Afficher la politique optimale
-        policy = self.get_optimal_policy()
-        self.affichage.afficher_policy(policy)
+        Returns:
+            V: Un dictionnaire contenant les valeurs d'état
+        """
+        V = {}
+        for state in self.Q:
+            V[state] = max(self.Q[state].values())
+        return V
+    
+    def record_trajectory(self, max_steps=100):
+        """
+        Enregistre une trajectoire en suivant la politique optimale actuelle.
+        
+        Args:
+            max_steps: Nombre maximum d'étapes
+            
+        Returns:
+            trajectory: Liste de tuples (état, action, récompense)
+        """
+        state = self.env.reset()
+        trajectory = []
+        done = False
+        steps = 0
+        
+        while not done and steps < max_steps:
+            # Choisir la meilleure action selon la politique actuelle
+            action = max(self.Q[state], key=self.Q[state].get)
+            
+            # Effectuer l'action
+            next_state, reward, done = self.env.step(action)
+            
+            # Enregistrer l'étape
+            trajectory.append((state, action, reward))
+            
+            # Mise à jour de l'état
+            state = next_state
+            steps += 1
+            
+        # Ajouter l'état final
+        trajectory.append((state, None, None))
+        
+        return trajectory

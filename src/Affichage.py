@@ -67,7 +67,6 @@ class Affichage:
         plt.show()
     
     def afficher_policy(self, policy):
-
         """
         Affiche la politique optimale sur la grille.
         """
@@ -120,7 +119,6 @@ class Affichage:
         
         plt.tight_layout()
         plt.show()
-    # Ajoutez cette méthode à votre classe Affichage existante
 
     def afficher_valeurs_etat(self, V):
         """
@@ -171,6 +169,93 @@ class Affichage:
         ax.set_xlabel('Colonne')
         ax.set_ylabel('Ligne')
         ax.grid(color='black', linestyle='-', linewidth=0.5, alpha=0.2)
+        
+        plt.tight_layout()
+        plt.show()
+        
+    def afficher_statistiques(self, rewards, steps):
+        """
+        Affiche les statistiques d'apprentissage: récompenses et nombre d'étapes par épisode.
+        
+        Args:
+            rewards: Liste des récompenses par épisode
+            steps: Liste du nombre d'étapes par épisode
+        """
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        fig.suptitle('Statistiques d\'apprentissage', fontsize=16)
+        
+        # Graphique des récompenses
+        axes[0, 0].plot(rewards)
+        axes[0, 0].set_title('Récompenses par épisode')
+        axes[0, 0].set_xlabel('Épisode')
+        axes[0, 0].set_ylabel('Récompense')
+        
+        # Graphique des étapes
+        axes[0, 1].plot(steps)
+        axes[0, 1].set_title('Nombre d\'étapes par épisode')
+        axes[0, 1].set_xlabel('Épisode')
+        axes[0, 1].set_ylabel('Nombre d\'étapes')
+        
+        # Moyenne mobile des récompenses (fenêtre de 100 épisodes)
+        window_size = min(100, len(rewards))
+        if window_size > 0:
+            moving_avg_rewards = np.convolve(rewards, np.ones(window_size)/window_size, mode='valid')
+            axes[1, 0].plot(moving_avg_rewards)
+            axes[1, 0].set_title(f'Moyenne mobile des récompenses (fenêtre de {window_size} épisodes)')
+            axes[1, 0].set_xlabel('Épisode')
+            axes[1, 0].set_ylabel('Récompense moyenne')
+        
+        # Moyenne mobile des étapes (fenêtre de 100 épisodes)
+        if window_size > 0:
+            moving_avg_steps = np.convolve(steps, np.ones(window_size)/window_size, mode='valid')
+            axes[1, 1].plot(moving_avg_steps)
+            axes[1, 1].set_title(f'Moyenne mobile des étapes (fenêtre de {window_size} épisodes)')
+            axes[1, 1].set_xlabel('Épisode')
+            axes[1, 1].set_ylabel('Nombre moyen d\'étapes')
+        
+        plt.tight_layout()
+        plt.show()
+        
+    def afficher_trajectory(self, trajectory):
+        """
+        Affiche la trajectoire d'un agent dans l'environnement.
+        
+        Args:
+            trajectory: Liste de tuples (état, action, récompense)
+        """
+        # Créer une grille pour la trajectoire
+        grid = np.zeros((self.frozen_lake.grid_size, self.frozen_lake.grid_size))
+        grid[self.frozen_lake.goal] = 2  # Objectif
+        for trap in self.frozen_lake.traps:
+            grid[trap] = -1  # Pièges
+        
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(grid, cmap='coolwarm', origin='upper')
+        
+        # Dessiner la trajectoire
+        prev_state = None
+        for state, action, reward in trajectory:
+            if prev_state is not None:
+                ax.arrow(prev_state[1], prev_state[0], 
+                        state[1] - prev_state[1], state[0] - prev_state[0],
+                        head_width=0.2, head_length=0.2, fc='black', ec='black')
+            prev_state = state
+        
+        # Affichage des cases spéciales
+        for i in range(self.frozen_lake.grid_size):
+            for j in range(self.frozen_lake.grid_size):
+                if (i, j) == self.frozen_lake.start:
+                    ax.text(j, i, 'S', ha='center', va='center', fontsize=12, color='green')
+                elif (i, j) == self.frozen_lake.goal:
+                    ax.text(j, i, 'G', ha='center', va='center', fontsize=12, color='black')
+                elif (i, j) in self.frozen_lake.traps:
+                    ax.text(j, i, 'X', ha='center', va='center', fontsize=12, color='black')
+        
+        ax.set_title('Trajectoire de l\'agent')
+        ax.set_xticks(np.arange(-0.5, self.frozen_lake.grid_size, 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, self.frozen_lake.grid_size, 1), minor=True)
+        ax.grid(which='minor', color='black', linestyle='-', linewidth=1)
+        ax.tick_params(which='both', bottom=False, left=False, labelbottom=False, labelleft=False)
         
         plt.tight_layout()
         plt.show()
