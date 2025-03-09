@@ -38,6 +38,7 @@ class FrozenLake:
     def step(self, action):
         """
         Effectue une action dans l'environnement.
+        Gère correctement les bords pour empêcher l'agent de sortir de la grille.
         
         Args:
             action: L'action à effectuer ('up', 'down', 'left', 'right')
@@ -49,17 +50,23 @@ class FrozenLake:
         """
         x, y = self.state
         
-        if action == 'up' and x > 0:
-            x -= 1
-        elif action == 'down' and x < self.grid_size - 1:
-            x += 1
-        elif action == 'left' and y > 0:
-            y -= 1
-        elif action == 'right' and y < self.grid_size - 1:
-            y += 1
-            
+        # Calcul du nouvel état en fonction de l'action
+        if action == 'up':
+            x = max(x - 1, 0)  # Ne pas dépasser le bord supérieur
+        elif action == 'down':
+            x = min(x + 1, self.grid_size - 1)  # Ne pas dépasser le bord inférieur
+        elif action == 'left':
+            y = max(y - 1, 0)  # Ne pas dépasser le bord gauche
+        elif action == 'right':
+            y = min(y + 1, self.grid_size - 1)  # Ne pas dépasser le bord droit
+        
+        # Mise à jour de l'état
         self.state = (x, y)
+        
+        # Calcul de la récompense
         reward = self.grid[x, y]
-        done = (self.state == self.goal) or (self.state in self.traps)  # Vérifie si on a gagné ou perdu
+        
+        # Vérification si l'épisode est terminé
+        done = (self.state == self.goal) or (self.state in self.traps)
         
         return self.state, reward, done

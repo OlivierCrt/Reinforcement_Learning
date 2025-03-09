@@ -9,7 +9,7 @@ affichage = Affichage(env)
 affichage.afficher()
 
 value_iter = ValueIteration(env)
-V, policy, Q = value_iter.run(seuil=0.001, max_iterations=1000)
+V, policy, Q = value_iter.run(seuil=0.00000001, max_iterations=1000)
 value_iter.afficher_resultats()
 
 # Vous pouvez également tester avec différentes valeurs de seuil pour comparer

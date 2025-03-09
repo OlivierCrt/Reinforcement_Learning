@@ -1,5 +1,6 @@
 import numpy as np
 from src.Affichage import Affichage
+import random
 
 class ValueIteration:
     def __init__(self, frozen_lake, gamma=0.9):
@@ -95,7 +96,7 @@ class ValueIteration:
                     delta = max(delta, abs(v - self.V[state]))
             
             # Afficher la progression toutes les 10 itérations
-            if iterations % 10 == 0:
+            if iterations % 1 == 0:
                 print(f"Itération {iterations}, Delta = {delta:.6f}")
             
             # Vérifier la convergence ou le nombre maximum d'itérations
@@ -111,6 +112,7 @@ class ValueIteration:
     def _calculate_optimal_policy(self):
         """
         Calcule la politique optimale basée sur les valeurs Q finales.
+        En cas d'égalité, choisit une action au hasard parmi les meilleures.
         """
         for i in range(self.grid_size):
             for j in range(self.grid_size):
@@ -120,13 +122,18 @@ class ValueIteration:
                 if state == self.frozen_lake.goal or state in self.frozen_lake.traps:
                     continue
                 
-                # Trouver l'action avec la plus grande valeur Q
-                best_action = max(self.Q[state], key=self.Q[state].get)
+                # Trouver la valeur Q maximale
+                max_q = max(self.Q[state].values())
+                
+                # Trouver toutes les actions qui ont cette valeur Q maximale
+                best_actions = [action for action, q_value in self.Q[state].items() if q_value == max_q]
+                
+                # Choisir une action au hasard parmi les meilleures actions
+                best_action = random.choice(best_actions)
                 
                 # Définir la politique (déterministe)
                 for action in self.actions:
                     self.policy[state][action] = 1.0 if action == best_action else 0.0
-    
     def afficher_resultats(self):
         """
         Affiche les résultats de l'algorithme Value Iteration.

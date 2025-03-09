@@ -26,6 +26,7 @@ class QLearning:
     def choose_action(self, state):
         """
         Choisit une action selon la politique epsilon-greedy.
+        En cas d'égalité, choisit une action au hasard parmi les meilleures.
         
         Args:
             state: L'état actuel
@@ -38,7 +39,9 @@ class QLearning:
             return random.choice(self.env.actions)
         else:
             # Exploitation: meilleure action connue
-            return max(self.Q[state], key=self.Q[state].get)
+            max_q = max(self.Q[state].values())
+            best_actions = [action for action, q_value in self.Q[state].items() if q_value == max_q]
+            return random.choice(best_actions)
     
     def update(self, state, action, reward, next_state, done):
         """
@@ -112,15 +115,25 @@ class QLearning:
     def get_policy(self):
         """
         Extrait la politique optimale à partir de la Q-table.
+        En cas d'égalité, choisit une action au hasard parmi les meilleures.
         
         Returns:
             policy: Un dictionnaire contenant la politique optimale
         """
         policy = {}
         for state in self.Q:
+            # Trouver la valeur Q maximale pour cet état
+            max_q = max(self.Q[state].values())
+            
+            # Trouver toutes les actions qui ont cette valeur Q maximale
+            best_actions = [action for action, q_value in self.Q[state].items() if q_value == max_q]
+            
+            # Choisir une action au hasard parmi les meilleures actions
+            chosen_action = random.choice(best_actions)
+            
+            # Définir la politique (déterministe)
             policy[state] = {action: 0.0 for action in self.env.actions}
-            best_action = max(self.Q[state], key=self.Q[state].get)
-            policy[state][best_action] = 1.0
+            policy[state][chosen_action] = 1.0
         return policy
     
     def get_value_function(self):
