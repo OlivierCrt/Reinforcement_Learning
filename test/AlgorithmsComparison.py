@@ -316,18 +316,10 @@ class AlgorithmsComparison:
 
 
 def main():
-    # Créer l'objet de comparaison
     comparison = AlgorithmsComparison(grid_size=7)
-    
-    # Exécuter tous les algorithmes
     results = comparison.run_all_algorithms(episodes=1000)
-    
-    # Afficher la comparaison
     comparison.display_comparison(results)
-    
-    # Analyser l'impact d'epsilon
     comparison.analyze_epsilon_impact(results)
-    
     print("\nComparaison des algorithmes terminée.")
 
 

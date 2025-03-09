@@ -18,7 +18,7 @@ class PolicyIteration:
         self.n_states = frozen_lake.grid_size ** 2
         self.affichage = Affichage(frozen_lake)
         
-        # Initialisation de la politique (équiprobable)
+        # Initialisation de la politique (1/4)
         self.policy = {}
         for i in range(self.grid_size):
             for j in range(self.grid_size):
@@ -30,7 +30,7 @@ class PolicyIteration:
             for j in range(self.grid_size):
                 self.V[(i, j)] = 0.0
         
-        # Initialisation de la Q-table
+        # Initialisation q-table
         self.Q = {}
         for i in range(self.grid_size):
             for j in range(self.grid_size):
@@ -151,8 +151,5 @@ class PolicyIteration:
         """
         Affiche la Q-table et la politique optimale.
         """
-        # Afficher la Q-table
         self.affichage.afficher_q_table(self.Q)
-        
-        # Afficher la politique
         self.affichage.afficher_policy(self.policy)

@@ -12,24 +12,24 @@ alpha = 0.1
 gamma = 0.99
 epsilon = 0.1
 
-# Initialisation de l'environnement et de l'agent
+# Init
 env = FrozenLake(grid_size=grid_size)
 agent = QLearning(env, alpha=alpha, gamma=gamma, epsilon=epsilon)
 display = Affichage(env)
 
-# Affichage de l'environnement initial
-print("Environnement initial:")
-display.afficher()
+# environnement initial
+# print("Environnement initial:")
+# display.afficher()
 
-# Entraînement de l'agent
+# Entraînement
 rewards, steps = agent.train(episodes=episodes)
 
 # Réinitialisation de l'environnement
 env.reset()
 
 # Affichage de l'environnement final
-print("\nEnvironnement après entraînement:")
-display.afficher()
+# print("\nEnvironnement après entraînement:")
+# display.afficher()
 
 # Affichage de la Q-table
 print("\nQ-table:")

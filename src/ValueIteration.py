@@ -131,11 +131,6 @@ class ValueIteration:
         """
         Affiche les résultats de l'algorithme Value Iteration.
         """
-        # Afficher la Q-table
         self.affichage.afficher_q_table(self.Q)
-        
-        # Afficher la politique
         self.affichage.afficher_policy(self.policy)
-        
-        # Afficher les valeurs d'état
         self.affichage.afficher_valeurs_etat(self.V)
