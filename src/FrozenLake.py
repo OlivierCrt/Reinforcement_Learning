@@ -36,37 +36,32 @@ class FrozenLake:
         return self.state
    
     def step(self, action):
-        """
-        Effectue une action dans l'environnement.
-        Gère correctement les bords pour empêcher l'agent de sortir de la grille.
-        
-        Args:
-            action: L'action à effectuer ('up', 'down', 'left', 'right')
-            
-        Returns:
-            state: Le nouvel état
-            reward: La récompense obtenue
-            done: Booléen indiquant si l'épisode est terminé
-        """
         x, y = self.state
         
         # Calcul du nouvel état en fonction de l'action
+        new_x, new_y = x, y
         if action == 'up':
-            x = max(x - 1, 0)  # Ne pas dépasser le bord supérieur
+            new_x = max(x - 1, 0)
         elif action == 'down':
-            x = min(x + 1, self.grid_size - 1)  # Ne pas dépasser le bord inférieur
+            new_x = min(x + 1, self.grid_size - 1)
         elif action == 'left':
-            y = max(y - 1, 0)  # Ne pas dépasser le bord gauche
+            new_y = max(y - 1, 0)
         elif action == 'right':
-            y = min(y + 1, self.grid_size - 1)  # Ne pas dépasser le bord droit
+            new_y = min(y + 1, self.grid_size - 1)
         
-        # Mise à jour de l'état
-        self.state = (x, y)
-        
-        # Calcul de la récompense
-        reward = self.grid[x, y]
-        
-        # Vérification si l'épisode est terminé
-        done = (self.state == self.goal) or (self.state in self.traps)
+        # Vérifier si l'agent a atteint un bord
+        if (new_x == x and new_y == y):
+            # L'agent a atteint un bord, pénalité modérée
+            reward = -10  # Pénalité pour avoir atteint un bord
+            done = False
+        else:
+            # Mise à jour de l'état
+            self.state = (new_x, new_y)
+            
+            # Calcul de la récompense
+            reward = self.grid[new_x, new_y]
+            
+            # Vérification si l'épisode est terminé
+            done = (self.state == self.goal) or (self.state in self.traps)
         
         return self.state, reward, done
